@@ -1,0 +1,6 @@
+# MetaMCP namespace override
+
+[mcp_servers.metamcp]
+url = "http://umbrel.local:12008/metamcp/hariom0sharma/mcp"
+enabled = true
+startup_timeout_sec = 30

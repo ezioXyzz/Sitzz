@@ -114,31 +114,45 @@ export function App() {
 
 	return (
 		<main
-			className="min-h-screen bg-[var(--fb-bg)] p-4 font-sans text-[var(--fb-text)] md:p-6"
+			className="demo-shell min-h-svh min-w-0 bg-[var(--fb-bg)] font-sans text-[var(--fb-text)]"
 			{...getFileBrowserDensityAttributes(density)}
 		>
-			<div className="mx-auto flex max-w-7xl flex-col gap-3">
+			<div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-3">
 				<FileBrowserProvider>
 					<section className="flex flex-wrap items-center gap-2 rounded-[var(--fb-radius)] border border-[var(--fb-border)] bg-[var(--fb-surface)] p-2">
-						<div className="mr-auto min-w-56 px-1">
+						<div className="mr-auto w-full min-w-0 px-1 lg:w-auto">
 							<h1 className="m-0 text-[14px] font-semibold">React File Browser</h1>
 							<p className="m-0 mt-0.5 text-[12px] text-[var(--fb-muted)]">{activeMode.description}</p>
 						</div>
-						{DEMO_MODES.map((item) => (
-							<button
-								aria-pressed={mode === item.id}
-								className={`h-8 rounded-[calc(var(--fb-radius)-3px)] border px-2.5 text-[12px] font-medium outline-none transition focus:ring-2 focus:ring-[var(--fb-accent-soft)] ${
-									mode === item.id
-										? 'border-[var(--fb-accent)] bg-[var(--fb-accent-soft)] text-[var(--fb-accent)]'
-										: 'border-[var(--fb-border)] bg-[var(--fb-surface)] text-[var(--fb-text)] hover:bg-[var(--fb-bg)]'
-								}`}
-								key={item.id}
-								onClick={() => setMode(item.id)}
-								type="button"
-							>
-								{item.label}
-							</button>
-						))}
+						<select
+							aria-label="Demo mode"
+							className="min-h-[calc(var(--fb-gap)*11)] w-full min-w-0 rounded-[var(--fb-radius)] border border-[var(--fb-border)] bg-[var(--fb-surface)] px-[calc(var(--fb-gap)*2)] text-[16px] sm:hidden"
+							onChange={(event) => setMode(event.target.value as DemoMode['id'])}
+							value={mode}
+						>
+							{DEMO_MODES.map((item) => (
+								<option key={item.id} value={item.id}>
+									{item.label}
+								</option>
+							))}
+						</select>
+						<div className="hidden min-w-0 flex-wrap gap-[calc(var(--fb-gap)*2)] sm:flex">
+							{DEMO_MODES.map((item) => (
+								<button
+									aria-pressed={mode === item.id}
+									className={`min-h-[calc(var(--fb-gap)*11)] shrink-0 whitespace-nowrap rounded-[calc(var(--fb-radius)-3px)] border px-2.5 text-[12px] font-medium outline-none transition focus:ring-2 focus:ring-[var(--fb-accent-soft)] sm:min-h-8 [@media(pointer:coarse)]:min-h-[calc(var(--fb-gap)*11)] ${
+										mode === item.id
+											? 'border-[var(--fb-accent)] bg-[var(--fb-accent-soft)] text-[var(--fb-accent)]'
+											: 'border-[var(--fb-border)] bg-[var(--fb-surface)] text-[var(--fb-text)] hover:bg-[var(--fb-bg)]'
+									}`}
+									key={item.id}
+									onClick={() => setMode(item.id)}
+									type="button"
+								>
+									{item.label}
+								</button>
+							))}
+						</div>
 					</section>
 
 					{ready || mode === 'empty' || mode === 'denied' ? (
@@ -162,7 +176,7 @@ export function App() {
 							warnZipSizeBytes={64}
 						/>
 					) : (
-						<div className="grid min-h-[520px] place-items-center rounded-[var(--fb-radius)] border border-[var(--fb-border)] bg-[var(--fb-surface)] text-[12px] text-[var(--fb-muted)]">
+						<div className="grid min-h-[min(520px,100svh)] place-items-center rounded-[var(--fb-radius)] border border-[var(--fb-border)] bg-[var(--fb-surface)] text-[12px] text-[var(--fb-muted)]">
 							Loading demo files
 						</div>
 					)}

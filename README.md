@@ -33,6 +33,23 @@ S3, Cloudflare R2, Supabase Storage, an in-memory store, or any backend you impl
   shipped.
 - **Read-only mode**, comfortable/compact density, ESM-only, fully typed.
 
+### Responsive layouts
+
+The browser responds to its **container width**, including when embedded in a narrow modal or split
+pane. Below 40rem (640px with the default root font size), tap an item to open it. Long-press for
+multi-selection, or choose **Browser options → Select items**, then use the visible checkboxes and
+bottom action bar. Search stays visible; filter, sort, view, and folder creation live in Browser
+options. Upload remains available above the footer.
+
+Details use the sidebar at 64rem and above, and an on-demand sheet at smaller widths. On narrow
+layouts, select an item and choose **Details**. `showDetailsPanel={false}` hides both presentations.
+Custom item and details renderers should also use fluid widths.
+
+Dialogs fit the available viewport height. Narrow menus and conflicts use bottom sheets. The
+provider's transfer widget responds to the viewport, starts collapsed on phones, and expands into a
+scrollable queue without changing transfer state. Desktop mouse and keyboard interactions remain
+available, and touch controls retain their minimum target size in compact density.
+
 ## Install
 
 ```bash
@@ -210,7 +227,7 @@ or `bulkDownloadUrl`, those controls are hidden. Recursive folder drops are reje
 | `onSearchQueryChange` | `(query) => void` | None | Receives user-driven search changes. |
 | `density` | `"comfortable" \| "compact"` | `"comfortable"` | Row/tile density. |
 | `readOnly` | `boolean` | `false` | Hides all mutating affordances. |
-| `showDetailsPanel` | `boolean` | `true` | Toggles the right-hand details panel. |
+| `showDetailsPanel` | `boolean` | `true` | Toggles details, shown as a sidebar or responsive sheet. |
 | `uploadPolicy` | `FileBrowserUploadPolicy` | None | Reject files before they enqueue. |
 | `uploadConflictResolutions` | `FileBrowserUploadConflictResolution[]` | all | Allowed conflict-dialog actions. |
 | `allowClientZipFallback` | `boolean` | `true` | Allows browser-built ZIPs when no server ZIP exists. |

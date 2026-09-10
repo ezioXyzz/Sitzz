@@ -1,8 +1,9 @@
-import { Download, Pause, Play, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, Download, Pause, Play, X } from 'lucide-react'
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react'
 import type { PropsWithChildren } from 'react'
 import { createPortal } from 'react-dom'
 import { TransferManager } from './transfer-manager'
+import { ResponsiveDialog, useNarrowViewport } from '../components/responsive'
 import type {
 	BulkDownloadJob,
 	ResumeRestoredUploadInput,
@@ -17,6 +18,8 @@ const WIDGET_CONTROL_MOTION =
 	'transition-[background-color,border-color,color,box-shadow,opacity] duration-150 ease-out motion-reduce:transition-none'
 const WIDGET_SURFACE_MOTION =
 	'transition-[background-color,border-color,box-shadow,opacity] duration-200 ease-out motion-reduce:transition-none'
+const WIDGET_TOUCH_CONTROL =
+	'min-h-[calc(var(--fb-gap)*11)] min-w-[calc(var(--fb-gap)*11)] shrink-0 whitespace-nowrap sm:min-h-7 sm:min-w-7 [@media(pointer:coarse)]:min-h-[calc(var(--fb-gap)*11)] [@media(pointer:coarse)]:min-w-[calc(var(--fb-gap)*11)]'
 
 export type FileBrowserProviderProps = PropsWithChildren<{
 	manager?: TransferManager
@@ -128,6 +131,9 @@ function withDefaultStorage(options: TransferManagerOptions | undefined): Transf
 }
 
 function FloatingTransferWidget({ manager, snapshot }: { manager: TransferManager; snapshot: TransferSnapshot }) {
+	const narrow = useNarrowViewport()
+	const [expanded, setExpanded] = useState<boolean | null>(null)
+	const isExpanded = expanded ?? !narrow
 	const activeUploads = snapshot.uploads.filter(isVisibleUpload)
 	const uploadGroups = getActiveUploadGroups(snapshot.uploads)
 	const groupedUploadIds = new Set(uploadGroups.flatMap((group) => group.activeUploads.map((upload) => upload.id)))
@@ -143,62 +149,77 @@ function FloatingTransferWidget({ manager, snapshot }: { manager: TransferManage
 	const content = (
 		<aside
 			aria-label="Transfers"
-			className={`fixed bottom-4 right-4 z-50 w-[min(360px,calc(100vw-2rem))] rounded-[var(--fb-radius)] border border-[var(--fb-border)] bg-[var(--fb-surface)] p-3 text-[12px] text-[var(--fb-text)] shadow-[0_16px_44px_color-mix(in_oklch,var(--fb-text)_16%,transparent)] ${WIDGET_SURFACE_MOTION}`}
+			className={`fixed bottom-[calc(env(safe-area-inset-bottom)+var(--fb-gap)*28)] right-[max(calc(var(--fb-gap)*3),env(safe-area-inset-right))] z-50 flex max-h-[50dvh] max-w-[calc(100%-var(--fb-gap)*6)] flex-col rounded-[var(--fb-radius)] border border-[var(--fb-border)] bg-[var(--fb-surface)] p-[calc(var(--fb-gap)*3)] text-[12px] text-[var(--fb-text)] shadow-[0_16px_44px_color-mix(in_oklch,var(--fb-text)_16%,transparent)] sm:bottom-[calc(env(safe-area-inset-bottom)+var(--fb-gap)*4)] ${isExpanded ? 'w-[calc(var(--fb-gap)*90)]' : 'w-auto'} ${WIDGET_SURFACE_MOTION}`}
 		>
-			<div className="mb-2 flex items-center justify-between gap-2">
+			<div className="flex shrink-0 items-center justify-between gap-2">
 				<div className="font-semibold">Transfers</div>
 				<div className="text-[11px] text-[var(--fb-muted)]">{activeUploads.length + downloads.length} active</div>
+				<button
+					aria-expanded={isExpanded}
+					aria-label={isExpanded ? 'Collapse transfers' : 'Expand transfers'}
+					className={widgetIconButton()}
+					onClick={() => setExpanded(!isExpanded)}
+					type="button"
+				>
+					{isExpanded ? (
+						<ChevronDown aria-hidden="true" className="size-4" />
+					) : (
+						<ChevronUp aria-hidden="true" className="size-4" />
+					)}
+				</button>
 			</div>
-			<div className="flex flex-col gap-2">
-				{uploadGroups.map((group) => (
-					<UploadGroupCard group={group} key={group.group.id} manager={manager} />
-				))}
-				{standaloneUploads.map((upload) => (
-					<UploadTransferRow key={upload.id} manager={manager} upload={upload} />
-				))}
-				{downloads.map((download) => (
-					<div className="text-[11px] text-[var(--fb-muted)]" key={download.id}>
-						{download.status === 'ready' && download.url ? (
-							<div className="flex items-center justify-between gap-2">
-								<a
-									aria-label="Open prepared download"
-									className={`inline-flex min-w-0 items-center gap-1 rounded-[calc(var(--fb-radius)-4px)] px-1.5 py-1 font-medium text-[var(--fb-accent)] hover:bg-[var(--fb-accent-soft)] ${WIDGET_CONTROL_MOTION}`}
-									download
-									href={download.url}
-									onClick={() => manager.dismissDownload(download.id)}
-								>
-									<Download aria-hidden="true" className="size-3.5 shrink-0" />
-									<span className="truncate">{formatDownloadReadyLabel(download)}</span>
-								</a>
-								<button
-									aria-label="Dismiss download"
-									className={widgetIconButton()}
-									onClick={() => manager.dismissDownload(download.id)}
-									type="button"
-								>
-									<X aria-hidden="true" className="size-3.5" />
-								</button>
-							</div>
-						) : null}
-						{download.status === 'warning' ? (
-							<div className="flex items-center justify-between gap-2">
-								<span>Large client zip</span>
-								<button
-									className={widgetTextButton()}
-									onClick={() => void manager.confirmBulkDownload(download.id)}
-									type="button"
-								>
-									Continue
-								</button>
-							</div>
-						) : null}
-						{download.status === 'preparing' ? <span>Preparing zip</span> : null}
-						{download.status === 'failed' ? (
-							<span className="text-[var(--fb-danger)]">{download.error ?? 'Download failed'}</span>
-						) : null}
-					</div>
-				))}
-			</div>
+			{isExpanded ? (
+				<div className="mt-2 flex min-h-0 min-w-0 flex-col gap-2 overflow-y-auto overscroll-contain [overflow-wrap:anywhere]">
+					{uploadGroups.map((group) => (
+						<UploadGroupCard group={group} key={group.group.id} manager={manager} />
+					))}
+					{standaloneUploads.map((upload) => (
+						<UploadTransferRow key={upload.id} manager={manager} upload={upload} />
+					))}
+					{downloads.map((download) => (
+						<div className="text-[11px] text-[var(--fb-muted)]" key={download.id}>
+							{download.status === 'ready' && download.url ? (
+								<div className="flex items-center justify-between gap-2">
+									<a
+										aria-label="Open prepared download"
+										className={`inline-flex min-h-[calc(var(--fb-gap)*11)] min-w-0 items-center gap-1 rounded-[calc(var(--fb-radius)-4px)] px-1.5 py-1 font-medium text-[var(--fb-accent)] hover:bg-[var(--fb-accent-soft)] sm:min-h-7 [@media(pointer:coarse)]:min-h-[calc(var(--fb-gap)*11)] ${WIDGET_CONTROL_MOTION}`}
+										download
+										href={download.url}
+										onClick={() => manager.dismissDownload(download.id)}
+									>
+										<Download aria-hidden="true" className="size-3.5 shrink-0" />
+										<span className="truncate">{formatDownloadReadyLabel(download)}</span>
+									</a>
+									<button
+										aria-label="Dismiss download"
+										className={widgetIconButton()}
+										onClick={() => manager.dismissDownload(download.id)}
+										type="button"
+									>
+										<X aria-hidden="true" className="size-3.5" />
+									</button>
+								</div>
+							) : null}
+							{download.status === 'warning' ? (
+								<div className="flex items-center justify-between gap-2">
+									<span>Large client zip</span>
+									<button
+										className={widgetTextButton()}
+										onClick={() => void manager.confirmBulkDownload(download.id)}
+										type="button"
+									>
+										Continue
+									</button>
+								</div>
+							) : null}
+							{download.status === 'preparing' ? <span>Preparing zip</span> : null}
+							{download.status === 'failed' ? (
+								<span className="text-[var(--fb-danger)]">{download.error ?? 'Download failed'}</span>
+							) : null}
+						</div>
+					))}
+				</div>
+			) : null}
 		</aside>
 	)
 
@@ -318,13 +339,9 @@ function ResumeUploadsPrompt({
 	onDismiss: () => void
 	onResume: () => void
 }) {
+	const narrow = useNarrowViewport()
 	return createPortal(
-		<div
-			aria-label="Resume uploads"
-			aria-modal="true"
-			className={`fixed inset-0 z-50 grid place-items-center bg-[color-mix(in_oklch,var(--fb-text)_20%,transparent)] p-4 text-[13px] text-[var(--fb-text)] ${WIDGET_SURFACE_MOTION}`}
-			role="dialog"
-		>
+		<ResponsiveDialog label="Resume uploads" narrow={narrow} onClose={onDismiss}>
 			<div
 				className={`w-[min(380px,100%)] rounded-[var(--fb-radius)] border border-[var(--fb-border)] bg-[var(--fb-surface)] p-4 shadow-[0_18px_50px_color-mix(in_oklch,var(--fb-text)_18%,transparent)] ${WIDGET_SURFACE_MOTION}`}
 			>
@@ -332,7 +349,7 @@ function ResumeUploadsPrompt({
 				<p className="mt-2 text-[12px] text-[var(--fb-muted)]">
 					Resume {count} upload{count === 1 ? '?' : 's?'}
 				</p>
-				<div className="mt-4 flex justify-end gap-2">
+				<div className="mt-4 flex flex-wrap justify-end gap-2">
 					<button className={widgetTextButton()} onClick={onDismiss} type="button">
 						Dismiss
 					</button>
@@ -341,7 +358,7 @@ function ResumeUploadsPrompt({
 					</button>
 				</div>
 			</div>
-		</div>,
+		</ResponsiveDialog>,
 		document.body
 	)
 }
@@ -349,15 +366,15 @@ function ResumeUploadsPrompt({
 const fallbackTransferManager = new TransferManager()
 
 function widgetIconButton() {
-	return `grid size-7 place-items-center rounded-[calc(var(--fb-radius)-4px)] border border-[var(--fb-border)] bg-[var(--fb-surface)] text-[var(--fb-muted)] outline-none hover:bg-[var(--fb-bg)] focus:ring-2 focus:ring-[var(--fb-accent-soft)] ${WIDGET_CONTROL_MOTION}`
+	return `grid size-7 place-items-center rounded-[calc(var(--fb-radius)-4px)] border border-[var(--fb-border)] bg-[var(--fb-surface)] text-[var(--fb-muted)] outline-none hover:bg-[var(--fb-bg)] focus:ring-2 focus:ring-[var(--fb-accent-soft)] ${WIDGET_TOUCH_CONTROL} ${WIDGET_CONTROL_MOTION}`
 }
 
 function widgetTextButton() {
-	return `inline-flex h-7 items-center rounded-[calc(var(--fb-radius)-4px)] border border-[var(--fb-border)] bg-[var(--fb-surface)] px-2 text-[11px] font-medium text-[var(--fb-text)] outline-none hover:bg-[var(--fb-bg)] focus:ring-2 focus:ring-[var(--fb-accent-soft)] ${WIDGET_CONTROL_MOTION}`
+	return `inline-flex h-7 items-center justify-center rounded-[calc(var(--fb-radius)-4px)] border border-[var(--fb-border)] bg-[var(--fb-surface)] px-2 text-[11px] font-medium text-[var(--fb-text)] outline-none hover:bg-[var(--fb-bg)] focus:ring-2 focus:ring-[var(--fb-accent-soft)] ${WIDGET_TOUCH_CONTROL} ${WIDGET_CONTROL_MOTION}`
 }
 
 function widgetPrimaryButton() {
-	return `inline-flex h-7 items-center rounded-[calc(var(--fb-radius)-4px)] border border-[var(--fb-accent)] bg-[var(--fb-accent)] px-2 text-[11px] font-semibold text-[var(--fb-surface)] outline-none hover:opacity-90 focus:ring-2 focus:ring-[var(--fb-accent-soft)] ${WIDGET_CONTROL_MOTION}`
+	return `inline-flex h-7 items-center justify-center rounded-[calc(var(--fb-radius)-4px)] border border-[var(--fb-accent)] bg-[var(--fb-accent)] px-2 text-[11px] font-semibold text-[var(--fb-surface)] outline-none hover:opacity-90 focus:ring-2 focus:ring-[var(--fb-accent-soft)] ${WIDGET_TOUCH_CONTROL} ${WIDGET_CONTROL_MOTION}`
 }
 
 function isVisibleUpload(upload: UploadTransfer): boolean {
