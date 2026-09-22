@@ -3,10 +3,10 @@ import { FILE_BROWSER_THEME_CONTRACT, getFileBrowserDensityAttributes } from '@/
 
 describe('theme token contract', () => {
 	test('maps public file-browser variables to host Tailwind token fallbacks', () => {
-		expect(FILE_BROWSER_THEME_CONTRACT.accent).toBe('var(--color-primary-500, oklch(.54 .19 285))')
-		expect(FILE_BROWSER_THEME_CONTRACT.surface).toBe('var(--color-white, #fff)')
-		expect(FILE_BROWSER_THEME_CONTRACT.border).toBe('var(--color-gray-200, #e5e5ee)')
-		expect(FILE_BROWSER_THEME_CONTRACT.radius).toBe('var(--radius-lg, 10px)')
+		expect(FILE_BROWSER_THEME_CONTRACT.accent).toBe('var(--color-primary-500, oklch(.62 .19 255))')
+		expect(FILE_BROWSER_THEME_CONTRACT.surface).toBe('oklch(.32 .06 255 / .38)')
+		expect(FILE_BROWSER_THEME_CONTRACT.border).toBe('oklch(.75 .08 255 / .16)')
+		expect(FILE_BROWSER_THEME_CONTRACT.radius).toBe('var(--radius-lg, 14px)')
 		expect(FILE_BROWSER_THEME_CONTRACT.gap).toBe('var(--spacing, .25rem)')
 	})
 

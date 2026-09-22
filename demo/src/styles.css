@@ -5,38 +5,60 @@
 
 @theme {
 	--font-sans: Figtree, ui-sans-serif, system-ui, sans-serif;
-	--color-primary-500: oklch(0.54 0.19 285);
-	--color-primary-50: oklch(0.54 0.19 285 / 0.09);
+	--color-primary-500: oklch(0.62 0.19 255);
+	--color-primary-50: oklch(0.62 0.19 255 / 0.16);
 }
 
 :root {
-	--fb-accent: var(--color-primary-500, oklch(0.54 0.19 285));
-	--fb-accent-soft: var(--color-primary-50, oklch(0.54 0.19 285 / 0.09));
-	--fb-bg: var(--color-gray-50, #f5f5f9);
-	--fb-surface: var(--color-white, #fff);
-	--fb-surface-2: var(--color-gray-100, #f1f1f6);
-	--fb-border: var(--color-gray-200, #e5e5ee);
-	--fb-border-strong: var(--color-gray-300, #d3d3e2);
-	--fb-text: var(--color-gray-950, #1a1a24);
-	--fb-muted: var(--color-gray-500, #71717f);
-	--fb-ok: var(--color-green-600, oklch(0.54 0.15 150));
-	--fb-ok-soft: var(--color-green-50, oklch(0.54 0.15 150 / 0.12));
-	--fb-warn: var(--color-yellow-600, oklch(0.54 0.15 80));
-	--fb-warn-soft: var(--color-yellow-50, oklch(0.54 0.15 80 / 0.12));
-	--fb-danger: var(--color-red-600, oklch(0.54 0.19 25));
-	--fb-danger-soft: var(--color-red-50, oklch(0.54 0.19 25 / 0.1));
-	--fb-folder: var(--color-amber-300, oklch(0.78 0.12 80));
-	--fb-radius: var(--radius-lg, 10px);
+	/* Dark blue, glassmorphism palette */
+	--fb-accent: var(--color-primary-500, oklch(0.62 0.19 255));
+	--fb-accent-soft: var(--color-primary-50, oklch(0.62 0.19 255 / 0.16));
+	--fb-bg: #060a18;
+	--fb-surface: oklch(0.32 0.06 255 / 0.38);
+	--fb-surface-2: oklch(0.4 0.07 255 / 0.32);
+	--fb-border: oklch(0.75 0.08 255 / 0.16);
+	--fb-border-strong: oklch(0.8 0.1 255 / 0.3);
+	--fb-text: oklch(0.96 0.02 250);
+	--fb-muted: oklch(0.72 0.05 255 / 0.85);
+	--fb-ok: oklch(0.75 0.16 155);
+	--fb-ok-soft: oklch(0.75 0.16 155 / 0.16);
+	--fb-warn: oklch(0.8 0.15 85);
+	--fb-warn-soft: oklch(0.8 0.15 85 / 0.16);
+	--fb-danger: oklch(0.7 0.19 20);
+	--fb-danger-soft: oklch(0.7 0.19 20 / 0.16);
+	--fb-folder: oklch(0.82 0.13 85);
+	--fb-radius: var(--radius-lg, 14px);
 	--fb-gap: var(--spacing, 0.25rem);
+
+	/* glass tuning knobs, used only below */
+	--fb-glass-blur: 20px;
+	--fb-glass-sheen: linear-gradient(
+		160deg,
+		oklch(1 0 0 / 0.08) 0%,
+		oklch(1 0 0 / 0.02) 35%,
+		oklch(1 0 0 / 0) 60%
+	);
 }
 
 * {
 	box-sizing: border-box;
 }
 
+html,
+body {
+	min-width: 0;
+	overflow-x: clip;
+}
+
 body {
 	margin: 0;
-	background: var(--fb-bg);
+	color: var(--fb-text);
+	background:
+		radial-gradient(60rem 40rem at 8% -10%, oklch(0.5 0.16 255 / 0.35), transparent 60%),
+		radial-gradient(50rem 36rem at 110% 10%, oklch(0.55 0.14 285 / 0.28), transparent 55%),
+		radial-gradient(60rem 50rem at 50% 120%, oklch(0.45 0.14 230 / 0.3), transparent 60%),
+		var(--fb-bg);
+	background-attachment: fixed;
 }
 
 button,
@@ -44,12 +66,7 @@ input,
 textarea,
 select {
 	font-family: inherit;
-}
-
-html,
-body {
-	min-width: 0;
-	overflow-x: clip;
+	color: inherit;
 }
 
 .demo-shell {
@@ -64,4 +81,48 @@ body {
 	.demo-shell {
 		padding: calc(var(--fb-gap) * 6);
 	}
+}
+
+/*
+ * Glassmorphism layer.
+ * These target the exact Tailwind arbitrary-value utility classes that the
+ * library and demo already use for surfaces (bg-[var(--fb-surface)], etc).
+ * Unlayered CSS always wins over Tailwind's @layer utilities, so this safely
+ * augments (not replaces) the themed background-color from those classes.
+ */
+.bg-\[var\(--fb-surface\)\],
+.bg-\[var\(--fb-surface-2\)\],
+.bg-\[var\(--fb-bg\)\] {
+	position: relative;
+	background-image: var(--fb-glass-sheen);
+	backdrop-filter: blur(var(--fb-glass-blur)) saturate(160%);
+	-webkit-backdrop-filter: blur(var(--fb-glass-blur)) saturate(160%);
+	box-shadow:
+		0 1px 0 0 oklch(1 0 0 / 0.06) inset,
+		0 8px 30px -12px oklch(0.1 0.05 255 / 0.6);
+}
+
+.bg-\[var\(--fb-bg\)\] {
+	--fb-glass-blur: 12px;
+	box-shadow: none;
+}
+
+/* Scrollbars in the dark glass theme */
+* {
+	scrollbar-color: var(--fb-border-strong) transparent;
+	scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--fb-border-strong);
+	border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
 }

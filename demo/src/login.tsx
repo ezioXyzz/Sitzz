@@ -71,7 +71,7 @@ export function Login({ onSuccess }: { onSuccess: () => void }) {
 					/>
 				</label>
 
-				{error ? <p className="m-0 text-[12px] text-red-600">Incorrect username or password.</p> : null}
+				{error ? <p className="m-0 text-[12px] text-[var(--fb-danger)]">Incorrect username or password.</p> : null}
 
 				<button
 					className="mt-1 min-h-9 rounded-[calc(var(--fb-radius)-3px)] border border-[var(--fb-accent)] bg-[var(--fb-accent)] px-2.5 text-[14px] font-medium text-white transition hover:opacity-90"
